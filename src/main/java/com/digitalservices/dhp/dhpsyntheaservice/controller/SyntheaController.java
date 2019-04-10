@@ -76,10 +76,21 @@ public class SyntheaController {
      * system.
      *
      * @param population the number of patient files synthea should create
+     * @param state the state of patients synthea should create
+     * @param city the city within the state to create patients within
+     * @param maxAge the maximum age of the returned patients
+     * @param minAge the minimum age of the returned patients
+     * @param gender the gender of patients synthea should create
      * @return A Json object that tells the caller that the process has started
      */
     @RequestMapping(value = "/synthea-run", method = RequestMethod.GET)
-    public ResponseEntity<SyntheaResponse> syntheaRun(@RequestParam String population) {
+      public ResponseEntity<SyntheaResponse> syntheaRun(@RequestParam String population,
+                                                        @RequestParam String gender,
+                                                        @RequestParam String state,
+                                                        @RequestParam String maxAge,
+                                                        @RequestParam String minAge,
+                                                        @RequestParam String city
+                                                        ) {
         //String userDir = handleCookie(request, response);
         ResponseEntity<SyntheaResponse> responseEntity;
         SyntheaResponse syntheaResponse = new SyntheaResponse(false);
@@ -88,13 +99,17 @@ public class SyntheaController {
             try {
                 JobDataMap jobDataMap = new JobDataMap();
                 jobDataMap.put("population", population);
+                jobDataMap.put("gender", gender);
+                jobDataMap.put("state", state);
+                jobDataMap.put("city", city);
+                jobDataMap.put("minAge", minAge);
+                jobDataMap.put("maxAge", maxAge);
                 scheduler.triggerJob(syntheaJobDetail.getKey(), jobDataMap);
                 syntheaResponse = new SyntheaResponse(true);
             } catch (SchedulerException e) {
                 LOG.error("Error running quartz job", e);
                 responseEntity = new ResponseEntity<SyntheaResponse>(HttpStatus.INTERNAL_SERVER_ERROR);
                 return responseEntity;
-
             }
         }
         responseEntity = new ResponseEntity<SyntheaResponse>(syntheaResponse, HttpStatus.OK);

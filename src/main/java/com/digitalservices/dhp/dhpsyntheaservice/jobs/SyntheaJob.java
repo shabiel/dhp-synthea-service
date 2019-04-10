@@ -39,6 +39,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Comparator;
+import java.util.List;
+import java.util.ArrayList;
 
 /**
  *
@@ -61,7 +63,13 @@ public class SyntheaJob extends QuartzJobBean {
     private String syntheaOutputFhir;
 
 
+
     private String population;
+    private String gender;
+    private String state;
+    private String city;
+    private String minAge;
+    private String maxAge;
 
     @Autowired
     private ProcessRepository processRepository;
@@ -70,7 +78,32 @@ public class SyntheaJob extends QuartzJobBean {
     protected void executeInternal(JobExecutionContext context) throws JobExecutionException {
 
         File file = new File(synthea);
-        ProcessBuilder processBuilder = new ProcessBuilder(command, arg1, arg2, population).inheritIO()
+        List<String> commandList = new ArrayList<String>();
+        /*
+         * Builds the command one object at a time.
+         *
+         * Adds default objects:
+         *  executable, run_synthea object, population key and value
+         *  min and max age key and value.
+         * */
+        commandList.add(command);
+        commandList.add(arg1);
+        commandList.add(arg2);
+        commandList.add(population);
+        commandList.add("-a");
+        commandList.add(minAge+"-"+maxAge);
+        // Checks for gender key.  if none, no addition to command
+        if (gender != "") {
+          commandList.add("-g");
+          commandList.add(gender);
+        }
+        // Adds default argument for state
+        commandList.add(state);
+        // Checks for city key, if none, no addition to command.
+        if (city != "") {
+          commandList.add(city);
+        }
+        ProcessBuilder processBuilder = new ProcessBuilder(commandList).inheritIO()
                 .directory(file);
         Path path = Paths.get(syntheaOutputFhir);
         deleteFiles(path);
@@ -122,5 +155,25 @@ public class SyntheaJob extends QuartzJobBean {
 
     public void setPopulation(String population) {
         this.population = population;
+    }
+
+    public void setGender(String gender) {
+        this.gender = gender;
+    }
+
+    public void setState(String state) {
+        this.state = state;
+    }
+
+    public void setCity(String city) {
+        this.city = city;
+    }
+
+    public void setMinAge(String minAge) {
+        this.minAge = minAge;
+    }
+
+    public void setMaxAge(String maxAge) {
+        this.maxAge = maxAge;
     }
 }
